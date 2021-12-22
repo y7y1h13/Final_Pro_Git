@@ -1,3 +1,6 @@
+import pymysql
+from sqlalchemy import text, create_engine
+
 class JjalDao:
     def connect(self):
         return pymysql.connect(host='127.0.0.1', user='bigdata',
