@@ -19,218 +19,228 @@ class Logic:
         self.ob_result = ''
         self.ac_result = ''
         self.em_result = ''
-        
+        self.word_ob = ()
+        self.word_ac = ()
         for i in self.pairs:
-            if (i.get_second() == 'NNP') or (i.get_second() == 'NNG'):
-                self.ob_result += self.dao.sel_object(i.get_first())
+            pos = i.get_second()
+            if pos == 'NNP' or pos == 'NNG':
+                self.word_ob = self.dao.sel_object(i.get_first())
+                if self.word_ob != ():
+                    self.ob_result += self.word_ob[0][0]
 
             elif i.get_second() == 'VV':
-                self.ac_result += self.dao.sel_action(i.get_first())         
+                self.word_ac = self.dao.sel_action(i.get_first())
+                if self.word_ac != ():
+                    self.ac_result += self.word_ac[0][0]         
 
-        #     elif (ob_result == '') and (ac_result == ''):#감성분석
-        #         em_result = dao.sel_emotion(i.get_first())
+#             elif word_ob == () and word_ac == () and pos == 'VA':#감성분석
+#                 self.em_result = self.dao.sel_emaction_onlyion(i.get_first())
 
 
         self.ob_result = self.ob_result.replace('][',',').replace('[','').replace(']','').replace(' ','').split(',')
         self.ac_result = self.ac_result.replace('][',',').replace('[','').replace(']','').replace(' ','').split(',')
+        
         
     # 빈도수 
     def freq(self):
         counter1 = Counter(self.ob_result)
         self.ob = counter1.most_common()
         counter2 = Counter(self.ac_result)
-        self.other = counter2.most_common()
+        self.action_onlyher = counter2.most_common()
         #     self.counter = Counter(em_result)
-        #     self.other = counter.most_common()
+        #     self.action_onlyher = counter.most_common()
         
     # 우선순위    
     def rank(self):
-        self.ob1 = [] # 개체 1순위
-        self.ob3 = [] 
-        self.ot = [] # 개체 해당 하지 않는 나머지 액션 값
-        self.ob2 = [] # 개체+액션 1순위
-        self.ob4 = [] # 개체+액션 2순위
+        self.ob_only = [] # 개체 1순위
+        self.ob_only_second = [] 
+        self.action_only = [] # 개체 해당 하지 않는 나머지 액션 값
+        self.ob_ac_first = [] # 개체+액션 1순위
+        self.ob_ac_second = [] # 개체+액션 2순위
         
         #개체만 분류
         for k,v in self.ob:
             if v != 1:
-                self.ob1.append(k)
+                self.ob_only.append(k)
             else :
-                self.ob3.append(k)
+                self.ob_only_second.append(k)
                 
                 
         #액션 추가
         # 개체에 해당하는 액션은 따로 분리해야함 해당하지 않는건 다른 리스트에 추가
-        for k,v in self.other:
-            if (k not in self.ob1) and (k in self.ob3):
-                self.ob3.append(k)
+        for k,v in self.action_onlyher:
+            if (k in self.ob_only) and (k in self.ob_only_second):
+                self.ob_only_second.append(k)
             else:
-                self.ot.append(k)
+                self.action_only.append(k)
         
         
-        counter = Counter(self.ob3)
+        counter = Counter(self.ob_only_second)
         tmp = counter.most_common()
         #1이면 1순위에 넣고 1이 아니면 2순위에 넣는다
         for k,v in tmp:
             if v != 1:
-                self.ob2.append(k)
+                self.ob_ac_first.append(k)
             else:
-                self.ob4.append(k)
+                self.ob_ac_second.append(k)
                 
                 
                 
                 
     def result(self):
         self.final = []
-        a = len(self.ob1)
-        b = len(self.ob2)
-        c = len(self.ob4)
-        # save_final(ob1)
-        if a == 1:
-            self.save_final(self.ob1)
+        ob_only_len = len(self.ob_only)
+        ob_ac_first_len = len(self.ob_ac_first)
+        ob_ac_second_len = len(self.ob_ac_second)
+        if ob_only_len == 1:
+            self.save_final(self.ob_only)
 
-            if b == 0:
+            if ob_ac_first_len == 0:
 
-                if c == 0:
-                    self.ot_3()
+                if ob_ac_second_len == 0:
+                    self.action_only_3()
 
-                elif c == 1:
-                    self.save_final(self.ob4)
-                    self.ot_2()
+                elif ob_ac_second_len == 1:
+                    self.save_final(self.ob_ac_second)
+                    self.action_only_2()
 
-                elif c == 2:
-                    self.save_final(self.ob4)
+                elif ob_ac_second_len == 2:
+                    self.save_final(self.ob_ac_second)
 
-                elif c >= 3:
-                    self.rand(self.ob4)
+                elif ob_ac_second_len >= 3:
+                    self.rand(self.ob_ac_second)
 
-            elif b == 1:
-                self.save_final(self.ob2)
+            elif ob_ac_first_len == 1:
+                self.save_final(self.ob_ac_first)
 
-                if c == 0:
-                    self.ot_2()
+                if ob_ac_second_len == 0:
+                    self.action_only_2()
 
-                elif c == 1:
-                    self.save_final(self.ob4)
+                elif ob_ac_second_len == 1:
+                    self.save_final(self.ob_ac_second)
 
-                elif c >= 2:
-                    self.rand(self.ob4)
+                elif ob_ac_second_len >= 2:
+                    self.rand(self.ob_ac_second)
 
-            elif b == 2:
-                self.save_final(self.ob2)
+            elif ob_ac_first_len == 2:
+                self.save_final(self.ob_ac_first)
 
-            elif b >= 3:
-                self.rand(self.ob2)
-
-
-        elif a == 2:
-            self.save_final(self.ob1)
-
-            if b == 0:
-
-                if c == 0:
-                    self.ot_2()
-
-                elif c == 1:
-                    self.save_final(self.ob4)
-
-                elif c >= 2:
-                    self.rand(self.ob4)
-
-        elif a == 3:
-            self.save_final(self.ob1)
-
-        elif a >= 4:
-            self.rand(self.ob1)
-
-        elif a == 0:
-
-            if b == 0:
-
-                if c == 0:
-                    self.ot_4()
-
-                elif c == 1:
-                    self.save_final(self.ob4)
-                    self.ot_3()
-
-                elif c == 2:
-                    self.save_final(self.ob4)
-                    self.ot_2()
-
-                elif c == 3:
-                    self.save_final(self.ot)
-
-                elif c >= 4:
-                    self.rand(self.ob4)
-
-            elif b == 1:
-                self.save_final(self.ob2)
-
-                if c == 0:
-                    self.ot_3()
-
-                elif c == 1:
-                    self.save_final(self.ob4)
-                    self.ot_2()
-
-                elif c == 2:
-                    self.save_final(self.ob4)
-
-                elif c >= 3:
-                    self.rand(self.ob4)            
+            elif ob_ac_first_len >= 3:
+                self.rand(self.ob_ac_first)
 
 
-            elif b == 2:
-                self.save_final(self.ob2)
+        elif ob_only_len == 2:
+            self.save_final(self.ob_only)
 
-                if c == 0:
-                    self.ot_2()
+            if ob_ac_first_len == 0:
 
-                elif c == 1:
-                    self.save_final(self.ob4)
-                elif c >= 2:
-                    self.rand(self.ob4)          
+                if ob_ac_second_len == 0:
+                    self.action_only_2()
 
-            elif b == 3:
-                self.save_final(self.ob2)
+                elif ob_ac_second_len == 1:
+                    self.save_final(self.ob_ac_second)
 
-            elif b >= 4:
-                self.rand(self.ob2)
+                elif ob_ac_second_len >= 2:
+                    self.rand(self.ob_ac_second)
+
+        elif ob_only_len == 3:
+            self.save_final(self.ob_only)
+
+        elif ob_only_len >= 4:
+            self.rand(self.ob_only)
+
+        elif ob_only_len == 0:
+
+            if ob_ac_first_len == 0:
+
+                if ob_ac_second_len == 0:
+                    self.action_only_4()
+
+                elif ob_ac_second_len == 1:
+                    self.save_final(self.ob_ac_second)
+                    self.action_only_3()
+
+                elif ob_ac_second_len == 2:
+                    self.save_final(self.ob_ac_second)
+                    self.action_only_2()
+
+                elif ob_ac_second_len == 3:
+                    self.save_final(self.action_only)
+
+                elif ob_ac_second_len >= 4:
+                    self.rand(self.ob_ac_second)
+
+            elif ob_ac_first_len == 1:
+                self.save_final(self.ob_ac_first)
+
+                if ob_ac_second_len == 0:
+                    self.action_only_3()
+
+                elif ob_ac_second_len == 1:
+                    self.save_final(self.ob_ac_second)
+                    self.action_only_2()
+
+                elif ob_ac_second_len == 2:
+                    self.save_final(self.ob_ac_second)
+
+                elif ob_ac_second_len >= 3:
+                    self.rand(self.ob_ac_second)            
+
+
+            elif ob_ac_first_len == 2:
+                self.save_final(self.ob_ac_first)
+
+                if ob_ac_second_len == 0:
+                    self.action_only_2()
+
+                elif ob_ac_second_len == 1:
+                    self.save_final(self.ob_ac_second)
+                elif ob_ac_second_len >= 2:
+                    self.rand(self.ob_ac_second)          
+
+            elif ob_ac_first_len == 3:
+                self.save_final(self.ob_ac_first)
+
+            elif ob_ac_first_len >= 4:
+                self.rand(self.ob_ac_first)
         self.fin()
         
                 
     def save_final(self,var):
+        self.var = var
         self.final += self.var
         
     def rand(self, var):
         self.var = var
         while len(self.final)<3:
             a = random.randint(0,(len(self.var)-1))
-            if self.var[a] not in self.final:
+            if self.var[a] in self.final:
                 self.final.append(self.var[a])
     
-    def ot_4(self):
-        if len(self.ot) < 4:
-            self.save_final(self.ot)
+    def action_only_4(self):
+        if len(self.action_only) < 4:
+            self.save_final(self.action_only)
                 
-        elif len(self.ot) >= 4:
-            self.rand(self.ot)   
+        elif len(self.action_only) >= 4:
+            self.rand(self.action_only)   
             
-    def ot_3(self):
-        if len(self.ot) < 3:
-            self.save_final(self.ot)
+    def action_only_3(self):
+        if len(self.action_only) < 3:
+            self.save_final(self.action_only)
                 
-        elif len(self.ot) >= 3:
-            self.rand(self.ot)
+        elif len(self.action_only) >= 3:
+            self.rand(self.action_only)
             
-    def ot_2(self):
-        if len(self.ot) < 2:
-            self.save_final(self.ot)
+    def action_only_2(self):
+        if len(self.action_only) < 2:
+            self.save_final(self.action_only)
 
-        elif len(self.ot) >= 2:
-            self.rand(self.ot)
+        elif len(self.action_only) >= 2:
+            self.rand(self.action_only)
             
     def fin(self):
+        if '' in self.final:
+            self.final.remove('')
+            
         for i in self.final:
             print(self.dao.sel_main(i))

@@ -13,7 +13,7 @@ class JjalDao:
         cursor.execute(sql,word)
         result = cursor.fetchall()
         conn.close()
-        return result[0][0]
+        return result
         
     def sel_emotion(self,word):
         conn = self.connect()
@@ -31,7 +31,7 @@ class JjalDao:
         cursor.execute(sql,word)
         result = cursor.fetchall()
         conn.close()
-        return result[0][0]
+        return result
         
     def sel_main(self,idx):
         conn = self.connect()
