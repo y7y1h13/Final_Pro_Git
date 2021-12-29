@@ -36,7 +36,7 @@ insert into emotion (단어,idx) values ('신이 난',json_array(6));
 insert into emotion (단어,idx) values ('우울한',json_array(16,17));
 insert into emotion (단어,idx) values ('짜증나는',json_array(1,2));
 insert into emotion (단어,idx) values ('혼란스러운',json_array(18));
-    
+
     
     
 -- action table    
